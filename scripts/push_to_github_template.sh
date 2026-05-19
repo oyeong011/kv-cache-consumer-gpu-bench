@@ -27,11 +27,11 @@ Directive: Interpret results as empirical cache pressure and strategy trade-offs
 Tested: Python syntax compilation for benchmark and analysis scripts.
 Not-tested: Full CUDA benchmark requires local GPU, model downloads, and optional quantized-cache backends."
 fi
+git branch -M main
 if ! gh repo view "$OWNER/$REPO" >/dev/null 2>&1; then
   gh repo create "$OWNER/$REPO" --public --source=. --remote=origin --push
 else
   git remote remove origin 2>/dev/null || true
   git remote add origin "https://github.com/$OWNER/$REPO.git"
-  git branch -M main
   git push -u origin main
 fi
