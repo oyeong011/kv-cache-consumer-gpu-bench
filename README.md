@@ -1,0 +1,155 @@
+# KV-cache Consumer GPU Benchmark
+
+This repository measures **KV-cache memory pressure** for Hugging Face causal language models on consumer GPUs.
+It is **not an Oaken reproduction**. Oaken's core contribution includes accelerator-level HW/SW co-design, dedicated quant/dequant hardware, and memory-management logic. This repo instead measures the root pressure that motivates Oaken-like work: KV-cache growth, latency degradation, and OOM boundaries during long-context inference.
+
+## Research questions
+
+1. Does actual `past_key_values` tensor footprint match the KV-cache theory?
+2. Where do context length and batch size hit OOM boundaries on consumer GPUs?
+3. How do `dynamic`, `quantized`, `offloaded`, and `no_cache` strategies trade memory for latency?
+4. When does quantized/offloaded cache help capacity, and when does overhead reduce throughput?
+
+## KV-cache formula
+
+```text
+KV bytes = 2 × num_layers × batch_size × seq_len × num_key_value_heads × head_dim × bytes_per_element
+```
+
+Use `num_key_value_heads`, not `num_attention_heads`, because modern GQA/MQA models store fewer KV heads than attention query heads.
+
+## Files
+
+```text
+run_kv_cache_bench.py          # benchmark harness
+analyze_results.py             # plot generator
+requirements.txt               # Python requirements
+PROMPT_FOR_CODEX.md            # original repo-generation prompt
+scripts/run_5060_tinyllama.sh  # RTX 5060-style run
+scripts/run_5080_qwen.sh       # RTX 5080-style run
+scripts/push_to_github_template.sh
+```
+
+## Setup
+
+```bash
+cd /home/ssu/kv_cache_consumer_gpu_bench
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+# Needed only for --cache-modes quantized with backend quanto/hqq:
+pip install optimum-quanto quanto hqq
+```
+
+If you only want `dynamic`, `offloaded`, and `no_cache`, the optional `optimum-quanto quanto hqq` install can be skipped. Current Transformers releases may require `optimum-quanto` for `cache_implementation="quantized"` with the quanto backend.
+
+## RTX 5060 8GB example
+
+```bash
+bash scripts/run_5060_tinyllama.sh
+```
+
+Equivalent explicit command:
+
+```bash
+python run_kv_cache_bench.py \
+  --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+  --seq-lens 128,256,512,1024,2048,3072 \
+  --batch-sizes 1,2,4 \
+  --cache-modes dynamic,quantized,offloaded,no_cache \
+  --max-new-tokens 32 \
+  --dtype fp16 \
+  --out results/results_5060_tinyllama.csv \
+  --warmup
+
+python analyze_results.py --csv results/results_5060_tinyllama.csv --outdir plots_5060
+```
+
+## RTX 5080 16GB example
+
+```bash
+bash scripts/run_5080_qwen.sh
+```
+
+Equivalent explicit command:
+
+```bash
+python run_kv_cache_bench.py \
+  --model-id Qwen/Qwen2.5-1.5B-Instruct \
+  --seq-lens 512,1024,2048,4096,8192 \
+  --batch-sizes 1,2,4,8 \
+  --cache-modes dynamic,quantized,offloaded,no_cache \
+  --max-new-tokens 64 \
+  --dtype fp16 \
+  --out results/results_5080_qwen25_1p5b.csv \
+  --warmup
+
+python analyze_results.py --csv results/results_5080_qwen25_1p5b.csv --outdir plots_5080
+```
+
+## CSV columns
+
+The benchmark writes one row per `(cache_mode, batch_size, seq_len)` case:
+
+- `model_id`
+- `gpu_name`
+- `dtype`
+- `cache_mode`
+- `batch_size`
+- `seq_len`
+- `max_new_tokens`
+- `status`: `ok`, `oom`, or `error`
+- `error`
+- `latency_ms`
+- `tokens_per_sec`
+- `generated_tokens_total`
+- `theoretical_kv_bytes`
+- `actual_prefill_kv_bytes`
+- `kv_actual_over_theory`
+- `base_allocated_bytes`
+- `peak_allocated_bytes`
+- `peak_delta_bytes`
+- `peak_reserved_bytes`
+- `free_before_bytes`
+- `free_after_bytes`
+- `total_vram_bytes`
+- `num_layers`
+- `num_attention_heads`
+- `num_key_value_heads`
+- `head_dim`
+
+OOM rows remain in the CSV and are excluded from plots.
+
+## Interpretation guide
+
+- `kv_actual_over_theory ≈ 1.0`: the formula explains the model's actual KV tensor footprint.
+- `tokens_per_sec` falls as `seq_len` grows: decode becomes increasingly pressured by KV-cache reads.
+- `dynamic` OOM but `quantized`/`offloaded` passes: cache compression/offload is useful at that capacity boundary.
+- `quantized` uses less memory but has lower throughput: quant/dequant overhead is visible.
+- `offloaded` avoids OOM but slows down: it is a capacity workaround, not a pure performance optimization.
+- `no_cache` degrades sharply at long context: KV reuse is essential for autoregressive decode.
+
+## GitHub upload
+
+With GitHub CLI authenticated:
+
+```bash
+cd /home/ssu/kv_cache_consumer_gpu_bench
+bash scripts/push_to_github_template.sh oyeong011 kv-cache-consumer-gpu-bench
+```
+
+Manual fallback:
+
+```bash
+git init
+git add .
+git commit -m "Measure KV-cache pressure on consumer GPUs"
+git branch -M main
+git remote add origin git@github.com:oyeong011/kv-cache-consumer-gpu-bench.git
+git push -u origin main
+```
+
+## Report sentence
+
+최근 Oaken과 같은 KV-cache 최적화 연구를 읽은 뒤, 해당 논문의 전용 hardware/software co-design을 consumer GPU에서 단순 재현하는 것은 핵심 성능 주장을 검증하기 어렵다고 판단했습니다. 대신 RTX 5060/5080 환경에서 Hugging Face 기반 causal LM의 KV-cache memory footprint, decode latency, OOM boundary를 직접 계측하는 실험을 구성했습니다. 이론적 KV-cache 크기와 실제 `past_key_values` tensor 크기를 비교하고, dynamic/quantized/offloaded/no-cache 전략의 memory-latency trade-off를 측정하여 긴 context inference에서 memory hierarchy와 data movement가 성능 병목으로 이어지는 지점을 분석하고 있습니다.

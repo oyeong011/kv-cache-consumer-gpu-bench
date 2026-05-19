@@ -1,0 +1,11 @@
+torch
+transformers>=4.44
+accelerate
+pandas
+matplotlib
+sentencepiece
+protobuf
+# Optional for --cache-modes quantized/offloaded backends:
+# optimum-quanto
+# quanto
+# hqq
