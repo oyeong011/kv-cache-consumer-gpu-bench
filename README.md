@@ -153,3 +153,38 @@ git push -u origin main
 ## Report sentence
 
 최근 Oaken과 같은 KV-cache 최적화 연구를 읽은 뒤, 해당 논문의 전용 hardware/software co-design을 consumer GPU에서 단순 재현하는 것은 핵심 성능 주장을 검증하기 어렵다고 판단했습니다. 대신 RTX 5060/5080 환경에서 Hugging Face 기반 causal LM의 KV-cache memory footprint, decode latency, OOM boundary를 직접 계측하는 실험을 구성했습니다. 이론적 KV-cache 크기와 실제 `past_key_values` tensor 크기를 비교하고, dynamic/quantized/offloaded/no-cache 전략의 memory-latency trade-off를 측정하여 긴 context inference에서 memory hierarchy와 data movement가 성능 병목으로 이어지는 지점을 분석하고 있습니다.
+
+## Smoke validation
+
+The benchmark pipeline was validated on an NVIDIA GeForce RTX 5080 with CUDA enabled. The first smoke test confirmed that both `dynamic` and `no_cache` generation paths run successfully, and the measured `actual_prefill_kv_bytes` matched the theoretical KV-cache size with `kv_actual_over_theory = 1.0`.
+
+The second smoke test confirmed that `offloaded` and `quantized` cache modes also run successfully after installing `optimum-quanto`. An artificial high-pressure case with `batch_size=512` and `seq_len=8192` triggered CUDA OOM and was correctly recorded as `status=oom` in the CSV output.
+
+## Initial RTX 5080 Qwen sweep
+
+An initial full RTX 5080 sweep was run with `Qwen/Qwen2.5-1.5B-Instruct` over:
+
+- `seq_len`: 512, 1024, 2048, 4096, 8192
+- `batch_size`: 1, 2, 4, 8
+- `cache_mode`: `dynamic`, `quantized`, `offloaded`, `no_cache`
+- `max_new_tokens`: 64
+- `dtype`: fp16
+
+Summary:
+
+- Total rows: 80
+- Successful rows: 76
+- OOM rows: 4
+- OOM boundary observed at `batch_size=8`, `seq_len=8192` for all four cache modes.
+- Mean `kv_actual_over_theory` across successful rows was `1.0` for every cache mode.
+
+This confirms the benchmark can measure KV-cache tensor footprint, decode throughput, latency, peak CUDA allocator deltas, and capacity-boundary OOM rows on the RTX 5080 environment.
+
+Result artifacts:
+
+- `results/results_5080_qwen25_1p5b.csv`
+- `plots_5080/throughput_vs_seq_len.png`
+- `plots_5080/latency_vs_seq_len.png`
+- `plots_5080/peak_delta_memory_vs_seq_len.png`
+- `plots_5080/actual_kv_vs_theoretical_kv.png`
+- `plots_5080/kv_actual_over_theory_vs_seq_len.png`
