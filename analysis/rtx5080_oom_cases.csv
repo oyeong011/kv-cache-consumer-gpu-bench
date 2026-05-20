@@ -1,0 +1,5 @@
+cache_mode,batch_size,seq_len,status
+dynamic,8,8192,oom
+offloaded,8,8192,oom
+no_cache,8,8192,oom
+quantized,8,8192,oom

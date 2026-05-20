@@ -1,0 +1,5 @@
+cache_mode,count,mean,min,max
+dynamic,19,1.0,1.0,1.0
+no_cache,19,1.0,1.0,1.0
+offloaded,19,1.0,1.0,1.0
+quantized,19,1.0,1.0,1.0

@@ -188,3 +188,34 @@ Result artifacts:
 - `plots_5080/peak_delta_memory_vs_seq_len.png`
 - `plots_5080/actual_kv_vs_theoretical_kv.png`
 - `plots_5080/kv_actual_over_theory_vs_seq_len.png`
+
+## RTX 5080 numeric analysis
+
+The detailed analysis is stored in `analysis/rtx5080_qwen25_analysis.md`.
+
+Key measured findings from the RTX 5080 Qwen2.5 sweep:
+
+- Status: 80 total cases, 76 successful cases, 4 OOM cases.
+- OOM boundary: `batch_size=8`, `seq_len=8192` for `dynamic`, `quantized`, `offloaded`, and `no_cache`.
+- KV formula check: all successful rows had `kv_actual_over_theory = 1.0`.
+- Throughput on common non-OOM cases relative to `dynamic`:
+  - `quantized`: 0.744× mean throughput
+  - `offloaded`: 0.594× mean throughput
+  - `no_cache`: 0.094× mean throughput
+- Peak CUDA allocated delta on common non-OOM cases relative to `dynamic`:
+  - `quantized`: 0.786× mean peak delta
+  - `offloaded`: 0.705× mean peak delta
+  - `no_cache`: 0.739× mean peak delta
+
+Representative long-context case, `batch_size=4`, `seq_len=8192`:
+
+| cache mode | tokens/s | latency ms | peak delta bytes |
+| --- | ---: | ---: | ---: |
+| dynamic | 124.96 | 2048.69 | 3121613312 |
+| quantized | 108.24 | 2365.16 | 2446330368 |
+| offloaded | 45.45 | 5632.32 | 2215643648 |
+| no_cache | 2.95 | 86730.71 | 2204519936 |
+
+Interpretation: `dynamic` remains the throughput baseline, `quantized` reduces peak memory with a smaller throughput penalty than offload in this long-context example, `offloaded` reduces memory but pays a larger throughput cost, and `no_cache` is not viable as a performance strategy for long-context decode.
+
+Caveat: the quantized run sometimes generated fewer than `max_new_tokens` because generation can stop early on EOS. `tokens_per_sec` is therefore the safer normalized throughput metric for cross-mode comparison; raw latency should be interpreted with generated token counts in mind.
