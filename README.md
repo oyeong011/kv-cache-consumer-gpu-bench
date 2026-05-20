@@ -3,6 +3,34 @@
 This repository measures **KV-cache memory pressure** for Hugging Face causal language models on consumer GPUs.
 It is **not an Oaken reproduction**. Oaken's core contribution includes accelerator-level HW/SW co-design, dedicated quant/dequant hardware, and memory-management logic. This repo instead measures the root pressure that motivates Oaken-like work: KV-cache growth, latency degradation, and OOM boundaries during long-context inference.
 
+
+## Key RTX 5080 result
+
+Initial measured result on `Qwen/Qwen2.5-1.5B-Instruct` with an NVIDIA GeForce RTX 5080:
+
+- 80 total cases, 76 successful cases, 4 OOM cases.
+- OOM occurred at `batch_size=8`, `seq_len=8192` for all cache modes.
+- `kv_actual_over_theory = 1.0` for every successful row, validating the KV-cache footprint formula against actual `past_key_values` tensors.
+- Mean throughput on common non-OOM cases relative to `dynamic`:
+  - `quantized`: 0.744×
+  - `offloaded`: 0.594×
+  - `no_cache`: 0.094×
+- Mean peak CUDA allocated delta on common non-OOM cases relative to `dynamic`:
+  - `quantized`: 0.786×
+  - `offloaded`: 0.705×
+  - `no_cache`: 0.739×
+
+Representative long-context case, `batch_size=4`, `seq_len=8192`:
+
+| cache mode | tokens/s | latency ms | peak delta bytes |
+| --- | ---: | ---: | ---: |
+| dynamic | 124.96 | 2048.69 | 3121613312 |
+| quantized | 108.24 | 2365.16 | 2446330368 |
+| offloaded | 45.45 | 5632.32 | 2215643648 |
+| no_cache | 2.95 | 86730.71 | 2204519936 |
+
+Interpretation: `dynamic` is the throughput baseline; `quantized` is the most balanced memory-saving strategy in this sweep; `offloaded` saves memory with larger throughput loss; `no_cache` is not viable as a long-context decode performance strategy. Detailed numbers are in `analysis/rtx5080_qwen25_analysis.md`.
+
 ## Research questions
 
 1. Does actual `past_key_values` tensor footprint match the KV-cache theory?
