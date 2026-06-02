@@ -1,0 +1,13 @@
+# Current RTX 5080 environment probe
+2026-06-02T09:17:17+09:00
+
+ssu-04
+
+NVIDIA GeForce RTX 5080, 16303 MiB, 580.142
+
+python 3.10.12
+torch 2.11.0+cu130
+torch_cuda 13.0
+cuda_available True
+gpu NVIDIA GeForce RTX 5080
+vram_bytes 16600596480

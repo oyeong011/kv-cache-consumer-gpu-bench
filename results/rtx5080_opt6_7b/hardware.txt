@@ -1,0 +1,24 @@
+Host: ssu-04
+Kernel: Linux ssu-04 6.8.0-40-generic #40~22.04.3-Ubuntu SMP PREEMPT_DYNAMIC Tue Jul 30 17:30:19 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+GPU: NVIDIA GeForce RTX 5080
+Driver: 580.142
+CUDA reported by nvidia-smi: 13.0
+GPU memory: 16303 MiB
+Idle memory after runs: 38 MiB
+
+Container: oaken-ae-container
+Image: oaken-ae-img
+Image ID: sha256:3c4459d2c5fb283a99b81c4b6964b29dee58bd5fc4e4b3d98c5f9a996ef427b6
+Image created: 2026-05-09T14:41:08.223129085+09:00
+
+PyTorch: 2.11.0+cu130
+PyTorch CUDA: 13.0
+
+Allocator setting for successful original/profiling runs:
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+Tiny CUDA gate:
+True
+NVIDIA GeForce RTX 5080
+tensor([0.], device='cuda:0')

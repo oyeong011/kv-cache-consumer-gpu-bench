@@ -1,0 +1,38 @@
+2026-05-09T22:06:47+09:00
+
+== host nvidia-smi ==
+Sat May  9 22:06:47 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5060        Off |   00000000:01:00.0 Off |                  N/A |
+|  0%   35C    P8              7W /  145W |      33MiB /   8151MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1386      G   /usr/lib/xorg/Xorg                       10MiB |
+|    0   N/A  N/A            1554      G   /usr/bin/gnome-shell                      3MiB |
++-----------------------------------------------------------------------------------------+
+
+== gpu query ==
+name, driver_version, memory.total [MiB], memory.used [MiB], memory.free [MiB]
+NVIDIA GeForce RTX 5060, 590.48.01, 8151 MiB, 33 MiB, 7668 MiB
+
+== docker ==
+CONTAINER ID   IMAGE          COMMAND                  CREATED       STATUS       PORTS     NAMES
+3c33f394d154   oaken-ae-img   "/opt/nvidia/nvidia_…"   5 hours ago   Up 5 hours             oaken-ae-container
+
+== container python/torch ==
+3.10.20 (main, Mar 11 2026, 17:46:40) [GCC 14.3.0]
+2.11.0+cu130
+True
+NVIDIA GeForce RTX 5060
