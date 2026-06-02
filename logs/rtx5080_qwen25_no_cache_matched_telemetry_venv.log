@@ -1,0 +1,8 @@
+loading model=/home/ssu/models/Qwen2.5-1.5B-Instruct resolved=/home/ssu/models/Qwen2.5-1.5B-Instruct dtype=fp16
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  64%|██████▍   | 216/338 [00:00<00:00, 2158.14it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 2197.16it/s]
+run mode=no_cache batch=8 seq_len=12288
+result mode=no_cache batch=8 seq_len=12288 status=OK peak_alloc_mib=3019.981445 throughput=28394.062040
+run mode=no_cache batch=8 seq_len=16384
+result mode=no_cache batch=8 seq_len=16384 status=OK peak_alloc_mib=3019.981445 throughput=30969.979354
+wrote results/two_gpu_arch/rtx5080_qwen25_15b_no_cache_matched_telemetry_venv.csv
+elapsed=0:15.21 maxrss_kb=6822144

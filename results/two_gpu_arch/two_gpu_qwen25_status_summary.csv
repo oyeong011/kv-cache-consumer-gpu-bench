@@ -1,0 +1,9 @@
+gpu,cache_mode,status_norm,rows
+RTX 5060,dynamic,OK,22
+RTX 5060,dynamic,OOM,2
+RTX 5060,no_cache,OK,2
+RTX 5060,quantized,OK,4
+RTX 5080,dynamic,OK,24
+RTX 5080,no_cache,OK,2
+RTX 5080,quantized,ERROR,8
+RTX 5080,quantized,OK,4

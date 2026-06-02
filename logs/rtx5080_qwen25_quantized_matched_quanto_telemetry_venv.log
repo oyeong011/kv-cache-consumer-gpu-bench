@@ -1,0 +1,12 @@
+loading model=/home/ssu/models/Qwen2.5-1.5B-Instruct resolved=/home/ssu/models/Qwen2.5-1.5B-Instruct dtype=fp16
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  66%|██████▋   | 224/338 [00:00<00:00, 2215.07it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 2260.67it/s]
+run mode=quantized batch=1 seq_len=1024
+result mode=quantized batch=1 seq_len=1024 status=OK peak_alloc_mib=2974.115234 throughput=1596.457150
+run mode=quantized batch=1 seq_len=2048
+result mode=quantized batch=1 seq_len=2048 status=OK peak_alloc_mib=2989.373047 throughput=7458.162757
+run mode=quantized batch=8 seq_len=12288
+result mode=quantized batch=8 seq_len=12288 status=OK peak_alloc_mib=4456.098633 throughput=9552.577042
+run mode=quantized batch=8 seq_len=16384
+result mode=quantized batch=8 seq_len=16384 status=OK peak_alloc_mib=4944.223633 throughput=7640.041608
+wrote results/two_gpu_arch/rtx5080_qwen25_15b_quantized_matched_quanto_telemetry_venv.csv
+elapsed=0:36.40 maxrss_kb=6822180

@@ -1,0 +1,52 @@
+loading model=/home/ssu/models/Qwen2.5-1.5B-Instruct resolved=/home/ssu/models/Qwen2.5-1.5B-Instruct dtype=fp16
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  40%|███▉      | 135/338 [00:00<00:00, 1341.06it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1872.95it/s]
+run mode=dynamic batch=1 seq_len=1024
+result mode=dynamic batch=1 seq_len=1024 status=OK peak_alloc_mib=2990.724609 throughput=2308.606911
+run mode=dynamic batch=1 seq_len=2048
+result mode=dynamic batch=1 seq_len=2048 status=OK peak_alloc_mib=3025.107422 throughput=9737.455149
+run mode=dynamic batch=1 seq_len=4096
+result mode=dynamic batch=1 seq_len=4096 status=OK peak_alloc_mib=3094.123047 throughput=8248.869787
+run mode=dynamic batch=1 seq_len=8192
+result mode=dynamic batch=1 seq_len=8192 status=OK peak_alloc_mib=3231.529297 throughput=6274.182226
+run mode=dynamic batch=1 seq_len=12288
+result mode=dynamic batch=1 seq_len=12288 status=OK peak_alloc_mib=3370.185547 throughput=5126.485555
+run mode=dynamic batch=1 seq_len=16384
+result mode=dynamic batch=1 seq_len=16384 status=OK peak_alloc_mib=3506.529297 throughput=4285.755132
+run mode=dynamic batch=2 seq_len=1024
+result mode=dynamic batch=2 seq_len=1024 status=OK peak_alloc_mib=3026.983398 throughput=15302.551886
+run mode=dynamic batch=2 seq_len=2048
+result mode=dynamic batch=2 seq_len=2048 status=OK peak_alloc_mib=3096.249023 throughput=15348.152972
+run mode=dynamic batch=2 seq_len=4096
+result mode=dynamic batch=2 seq_len=4096 status=OK peak_alloc_mib=3233.530273 throughput=13152.462928
+run mode=dynamic batch=2 seq_len=8192
+result mode=dynamic batch=2 seq_len=8192 status=OK peak_alloc_mib=3508.467773 throughput=10207.502578
+run mode=dynamic batch=2 seq_len=12288
+result mode=dynamic batch=2 seq_len=12288 status=OK peak_alloc_mib=3783.405273 throughput=8391.415408
+run mode=dynamic batch=2 seq_len=16384
+result mode=dynamic batch=2 seq_len=16384 status=OK peak_alloc_mib=4058.592773 throughput=7103.458111
+run mode=dynamic batch=4 seq_len=1024
+result mode=dynamic batch=4 seq_len=1024 status=OK peak_alloc_mib=3100.750977 throughput=21294.680051
+run mode=dynamic batch=4 seq_len=2048
+result mode=dynamic batch=4 seq_len=2048 status=OK peak_alloc_mib=3239.032227 throughput=19030.002004
+run mode=dynamic batch=4 seq_len=4096
+result mode=dynamic batch=4 seq_len=4096 status=OK peak_alloc_mib=3514.344727 throughput=15817.858105
+run mode=dynamic batch=4 seq_len=8192
+result mode=dynamic batch=4 seq_len=8192 status=OK peak_alloc_mib=4064.219727 throughput=11833.898828
+run mode=dynamic batch=4 seq_len=12288
+result mode=dynamic batch=4 seq_len=12288 status=OK peak_alloc_mib=4613.844727 throughput=9392.826628
+run mode=dynamic batch=4 seq_len=16384
+result mode=dynamic batch=4 seq_len=16384 status=OK peak_alloc_mib=5163.719727 throughput=7737.956242
+run mode=dynamic batch=8 seq_len=1024
+result mode=dynamic batch=8 seq_len=1024 status=OK peak_alloc_mib=3247.411133 throughput=25513.943939
+run mode=dynamic batch=8 seq_len=2048
+result mode=dynamic batch=8 seq_len=2048 status=OK peak_alloc_mib=3522.473633 throughput=23099.501747
+run mode=dynamic batch=8 seq_len=4096
+result mode=dynamic batch=8 seq_len=4096 status=OK peak_alloc_mib=4073.223633 throughput=19432.152879
+run mode=dynamic batch=8 seq_len=8192
+result mode=dynamic batch=8 seq_len=8192 status=OK peak_alloc_mib=5171.473633 throughput=14323.198881
+run mode=dynamic batch=8 seq_len=12288
+result mode=dynamic batch=8 seq_len=12288 status=OK peak_alloc_mib=6273.223633 throughput=11359.180483
+run mode=dynamic batch=8 seq_len=16384
+result mode=dynamic batch=8 seq_len=16384 status=OK peak_alloc_mib=7371.473633 throughput=9390.687238
+wrote results/two_gpu_arch/rtx5080_qwen25_15b_dynamic_grid_telemetry_venv.csv
+elapsed=1:20.37 maxrss_kb=6821944
