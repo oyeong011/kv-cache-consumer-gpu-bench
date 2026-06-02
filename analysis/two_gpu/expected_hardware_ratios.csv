@@ -1,0 +1,2 @@
+bandwidth_ratio_expected,cuda_core_ratio_expected,bandwidth_ratio_note,cuda_core_ratio_note
+2.142857142857143,2.8,GDDR7 bandwidth: 960 GB/s RTX 5080 / 448 GB/s RTX 5060,CUDA cores: 10752 RTX 5080 / 3840 RTX 5060

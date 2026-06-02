@@ -1,0 +1,123 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  51%|█████     | 173/338 [00:00<00:00, 1698.57it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1818.22it/s]
+Loaded /home/ssu/models/Qwen2.5-1.5B-Instruct on cuda; shape=ModelShape(num_layers=28, num_attention_heads=12, num_key_value_heads=2, head_dim=128)
+case cache=dynamic batch=1 seq=512
+  -> ok tps=80.86282075164385 err=
+case cache=dynamic batch=1 seq=1024
+  -> ok tps=76.57693014698944 err=
+case cache=dynamic batch=1 seq=2048
+  -> ok tps=68.01308652968623 err=
+case cache=dynamic batch=1 seq=4096
+  -> ok tps=54.78219882145448 err=
+case cache=dynamic batch=1 seq=8192
+  -> ok tps=38.216026055726644 err=
+case cache=dynamic batch=2 seq=512
+  -> ok tps=151.80365338821727 err=
+case cache=dynamic batch=2 seq=1024
+  -> ok tps=135.26776680807794 err=
+case cache=dynamic batch=2 seq=2048
+  -> ok tps=109.37849629326152 err=
+case cache=dynamic batch=2 seq=4096
+  -> ok tps=78.62175353536813 err=
+case cache=dynamic batch=2 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.62 G
+case cache=dynamic batch=4 seq=512
+  -> ok tps=269.4698015757414 err=
+case cache=dynamic batch=4 seq=1024
+  -> ok tps=219.35379848176848 err=
+case cache=dynamic batch=4 seq=2048
+  -> ok tps=160.2388428054333 err=
+case cache=dynamic batch=4 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=dynamic batch=4 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.97 G
+case cache=dynamic batch=8 seq=512
+  -> ok tps=440.22081575978217 err=
+case cache=dynamic batch=8 seq=1024
+  -> ok tps=322.84478272006095 err=
+case cache=dynamic batch=8 seq=2048
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=dynamic batch=8 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.99 G
+case cache=dynamic batch=8 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 1.09 GiB. GPU 0 has a total capacity of 7.52 GiB of which 708.88
+case cache=quantized batch=1 seq=512
+  -> ok tps=69.95905477984198 err=
+case cache=quantized batch=1 seq=1024
+  -> ok tps=65.86026514171046 err=
+case cache=quantized batch=1 seq=2048
+  -> ok tps=56.73402145049671 err=
+case cache=quantized batch=1 seq=4096
+  -> ok tps=46.23061371037344 err=
+case cache=quantized batch=1 seq=8192
+  -> ok tps=31.498962648330068 err=
+case cache=quantized batch=2 seq=512
+  -> ok tps=128.15534118951396 err=
+case cache=quantized batch=2 seq=1024
+  -> ok tps=112.74488997148218 err=
+case cache=quantized batch=2 seq=2048
+  -> ok tps=91.70955818212481 err=
+case cache=quantized batch=2 seq=4096
+  -> ok tps=64.68043164051693 err=
+case cache=quantized batch=2 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.62 G
+case cache=quantized batch=4 seq=512
+  -> ok tps=225.53862954843515 err=
+case cache=quantized batch=4 seq=1024
+  -> ok tps=184.06767231885644 err=
+case cache=quantized batch=4 seq=2048
+  -> ok tps=132.50529470328053 err=
+case cache=quantized batch=4 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=quantized batch=4 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.97 G
+case cache=quantized batch=8 seq=512
+  -> ok tps=372.76706820073457 err=
+case cache=quantized batch=8 seq=1024
+  -> ok tps=270.8043071136583 err=
+case cache=quantized batch=8 seq=2048
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=quantized batch=8 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.99 G
+case cache=quantized batch=8 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 1.09 GiB. GPU 0 has a total capacity of 7.52 GiB of which 708.88
+case cache=no_cache batch=1 seq=512
+  -> ok tps=19.601131089052956 err=
+case cache=no_cache batch=1 seq=1024
+  -> ok tps=10.555019402624305 err=
+case cache=no_cache batch=1 seq=2048
+  -> ok tps=5.334388002298061 err=
+case cache=no_cache batch=1 seq=4096
+  -> ok tps=2.5221037228393737 err=
+case cache=no_cache batch=1 seq=8192
+  -> ok tps=1.1386161867851672 err=
+case cache=no_cache batch=2 seq=512
+  -> ok tps=20.749032018892912 err=
+case cache=no_cache batch=2 seq=1024
+  -> ok tps=10.749747521895413 err=
+case cache=no_cache batch=2 seq=2048
+  -> ok tps=5.237624640443586 err=
+case cache=no_cache batch=2 seq=4096
+  -> ok tps=2.4690830845445944 err=
+case cache=no_cache batch=2 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.62 G
+case cache=no_cache batch=4 seq=512
+  -> ok tps=21.220095237617933 err=
+case cache=no_cache batch=4 seq=1024
+  -> ok tps=10.565114816945002 err=
+case cache=no_cache batch=4 seq=2048
+  -> ok tps=5.1362841138823345 err=
+case cache=no_cache batch=4 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=no_cache batch=4 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.97 G
+case cache=no_cache batch=8 seq=512
+  -> ok tps=20.75731288444125 err=
+case cache=no_cache batch=8 seq=1024
+  -> ok tps=10.372068120689208 err=
+case cache=no_cache batch=8 seq=2048
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 4.64 GiB. GPU 0 has a total capacity of 7.52 GiB of which 3.59 G
+case cache=no_cache batch=8 seq=4096
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 9.27 GiB. GPU 0 has a total capacity of 7.52 GiB of which 2.99 G
+case cache=no_cache batch=8 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 1.09 GiB. GPU 0 has a total capacity of 7.52 GiB of which 708.88

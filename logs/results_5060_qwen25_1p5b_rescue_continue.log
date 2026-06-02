@@ -1,0 +1,39 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  54%|█████▍    | 184/338 [00:00<00:00, 1804.89it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1862.07it/s]
+Loaded /home/ssu/models/Qwen2.5-1.5B-Instruct on cuda; shape=ModelShape(num_layers=28, num_attention_heads=12, num_key_value_heads=2, head_dim=128)
+case cache=dynamic batch=2 seq=2048
+  -> ok tps=109.83014581706908 err=
+case cache=dynamic batch=2 seq=4096
+  -> ok tps=79.05411328545925 err=
+case cache=dynamic batch=2 seq=8192
+  -> ok tps=49.08773120697311 err=
+case cache=dynamic batch=4 seq=2048
+  -> ok tps=160.99163886619206 err=
+case cache=dynamic batch=4 seq=4096
+  -> ok tps=102.6164735143926 err=
+case cache=dynamic batch=4 seq=8192
+  -> ok tps=56.37850834746428 err=
+case cache=dynamic batch=8 seq=2048
+  -> ok tps=210.6100852577304 err=
+case cache=dynamic batch=8 seq=4096
+  -> ok tps=119.43317102871657 err=
+case cache=dynamic batch=8 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 1.09 GiB. GPU 0 has a total capacity of 7.52 GiB of which 68.88 
+case cache=quantized batch=2 seq=2048
+  -> ok tps=91.50431726471558 err=
+case cache=quantized batch=2 seq=4096
+  -> ok tps=64.86238927981938 err=
+case cache=quantized batch=2 seq=8192
+  -> ok tps=38.68142893716002 err=
+case cache=quantized batch=4 seq=2048
+  -> ok tps=132.72088940217915 err=
+case cache=quantized batch=4 seq=4096
+  -> ok tps=81.39514107920495 err=
+case cache=quantized batch=4 seq=8192
+  -> ok tps=41.51607397361786 err=
+case cache=quantized batch=8 seq=2048
+  -> ok tps=169.37159118399964 err=
+case cache=quantized batch=8 seq=4096
+  -> ok tps=88.67175251862795 err=
+case cache=quantized batch=8 seq=8192
+  -> oom tps=nan err=OutOfMemoryError: CUDA out of memory. Tried to allocate 1.09 GiB. GPU 0 has a total capacity of 7.52 GiB of which 324.88

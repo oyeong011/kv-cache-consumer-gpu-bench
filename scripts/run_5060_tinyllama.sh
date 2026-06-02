@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p results plots_5060
+rm -f results/results_5060_tinyllama.csv
 python run_kv_cache_bench.py \
   --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
   --seq-lens 128,256,512,1024,2048,3072 \

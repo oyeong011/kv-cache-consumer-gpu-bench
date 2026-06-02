@@ -3,6 +3,14 @@
 This repository measures **KV-cache memory pressure** for Hugging Face causal language models on consumer GPUs.
 It is **not an Oaken reproduction**. Oaken's core contribution includes accelerator-level HW/SW co-design, dedicated quant/dequant hardware, and memory-management logic. This repo instead measures the root pressure that motivates Oaken-like work: KV-cache growth, latency degradation, and OOM boundaries during long-context inference.
 
+## Two-GPU architectural bottleneck analysis
+
+The latest documented comparison is in:
+
+- `docs/kv_cache_two_gpu_comparison.md`
+- `docs/kv_cache_architectural_bottleneck_analysis.md`
+
+It compares a newly rerun RTX 5060 Qwen2.5-1.5B grid with the existing RTX 5080 Qwen2.5-1.5B grid, regenerates plots from CSV, and separates directly backed evidence from limitations such as missing RTX 5080 telemetry and quantized-backend mismatch.
 
 ## Key RTX 5080 result
 

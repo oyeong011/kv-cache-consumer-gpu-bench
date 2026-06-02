@@ -1,0 +1,5 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  51%|█████     | 173/338 [00:00<00:00, 1718.27it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1847.66it/s]
+Loaded /home/ssu/models/Qwen2.5-1.5B-Instruct on cuda; shape=ModelShape(num_layers=28, num_attention_heads=12, num_key_value_heads=2, head_dim=128)
+case cache=quantized batch=1 seq=512
+exit_code=124

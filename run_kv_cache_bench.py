@@ -14,6 +14,8 @@ import csv
 import gc
 import math
 import os
+import subprocess
+import threading
 import time
 import traceback
 from dataclasses import dataclass, asdict
@@ -39,6 +41,8 @@ CSV_COLUMNS = [
     "theoretical_kv_bytes",
     "actual_prefill_kv_bytes",
     "kv_actual_over_theory",
+    "prefill_status",
+    "prefill_error",
     "base_allocated_bytes",
     "peak_allocated_bytes",
     "peak_delta_bytes",
@@ -46,6 +50,15 @@ CSV_COLUMNS = [
     "free_before_bytes",
     "free_after_bytes",
     "total_vram_bytes",
+    "telemetry_samples",
+    "gpu_util_mean_pct",
+    "gpu_util_max_pct",
+    "memory_util_mean_pct",
+    "memory_util_max_pct",
+    "power_draw_mean_w",
+    "power_draw_max_w",
+    "quantized_nbits",
+    "quantized_backend",
     "num_layers",
     "num_attention_heads",
     "num_key_value_heads",
@@ -191,7 +204,7 @@ def is_oom(exc: BaseException) -> bool:
     return "out of memory" in text or "cuda error: out of memory" in text
 
 
-def build_generate_kwargs(cache_mode: str) -> dict[str, Any]:
+def build_generate_kwargs(cache_mode: str, *, quantized_nbits: int = 4, quantized_backend: str = "quanto") -> dict[str, Any]:
     if cache_mode == "no_cache":
         return {"use_cache": False}
     if cache_mode == "dynamic":
@@ -202,7 +215,7 @@ def build_generate_kwargs(cache_mode: str) -> dict[str, Any]:
         return {
             "use_cache": True,
             "cache_implementation": "quantized",
-            "cache_config": {"nbits": 4, "backend": "quanto"},
+            "cache_config": {"nbits": quantized_nbits, "backend": quantized_backend},
         }
     raise ValueError(f"Unsupported cache mode: {cache_mode}")
 
@@ -212,6 +225,80 @@ def prefill_kv_bytes(model: Any, inputs: dict[str, torch.Tensor]) -> int:
         outputs = model(**inputs, use_cache=True)
     pkv = getattr(outputs, "past_key_values", None)
     return int(tensor_bytes(pkv))
+
+
+def query_nvidia_smi_telemetry() -> dict[str, float] | None:
+    """Sample coarse device telemetry from nvidia-smi.
+
+    The memory utilization field is nvidia-smi's percentage counter, not a
+    direct DRAM GB/s measurement. It is useful as a coarse utilization signal
+    when Nsight/NVML counters are not part of a run.
+    """
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=utilization.gpu,utilization.memory,power.draw",
+                "--format=csv,noheader,nounits",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+    line = proc.stdout.strip().splitlines()[0] if proc.stdout.strip() else ""
+    parts = [part.strip() for part in line.split(",")]
+    if len(parts) < 3:
+        return None
+    try:
+        return {
+            "gpu_util_pct": float(parts[0]),
+            "memory_util_pct": float(parts[1]),
+            "power_draw_w": float(parts[2]),
+        }
+    except ValueError:
+        return None
+
+
+def telemetry_monitor(stop: threading.Event, samples: list[dict[str, float]], interval_s: float) -> None:
+    """Background sampler for best-effort nvidia-smi telemetry."""
+    while not stop.is_set():
+        sample = query_nvidia_smi_telemetry()
+        if sample is not None:
+            samples.append(sample)
+        stop.wait(max(0.05, interval_s))
+
+
+def summarize_telemetry(samples: list[dict[str, float]]) -> dict[str, Any]:
+    if not samples:
+        return {
+            "telemetry_samples": 0,
+            "gpu_util_mean_pct": math.nan,
+            "gpu_util_max_pct": math.nan,
+            "memory_util_mean_pct": math.nan,
+            "memory_util_max_pct": math.nan,
+            "power_draw_mean_w": math.nan,
+            "power_draw_max_w": math.nan,
+        }
+
+    def mean(name: str) -> float:
+        return float(sum(sample[name] for sample in samples) / len(samples))
+
+    def max_value(name: str) -> float:
+        return float(max(sample[name] for sample in samples))
+
+    return {
+        "telemetry_samples": len(samples),
+        "gpu_util_mean_pct": mean("gpu_util_pct"),
+        "gpu_util_max_pct": max_value("gpu_util_pct"),
+        "memory_util_mean_pct": mean("memory_util_pct"),
+        "memory_util_max_pct": max_value("memory_util_pct"),
+        "power_draw_mean_w": mean("power_draw_w"),
+        "power_draw_max_w": max_value("power_draw_w"),
+    }
 
 
 def bench_one(
@@ -227,6 +314,10 @@ def bench_one(
     shape: ModelShape,
     device: torch.device,
     warmup: bool,
+    quantized_nbits: int,
+    quantized_backend: str,
+    telemetry_interval_s: float,
+    continue_after_prefill_oom: bool,
 ) -> dict[str, Any]:
     row: dict[str, Any] = {
         "model_id": model_id,
@@ -244,6 +335,8 @@ def bench_one(
         "theoretical_kv_bytes": theoretical_kv_bytes(shape, batch_size, seq_len, dtype_name),
         "actual_prefill_kv_bytes": math.nan,
         "kv_actual_over_theory": math.nan,
+        "prefill_status": "not_started",
+        "prefill_error": "",
         "base_allocated_bytes": int(torch.cuda.memory_allocated(device) if device.type == "cuda" else 0),
         "peak_allocated_bytes": math.nan,
         "peak_delta_bytes": math.nan,
@@ -251,15 +344,27 @@ def bench_one(
         "free_before_bytes": math.nan,
         "free_after_bytes": math.nan,
         "total_vram_bytes": math.nan,
+        **summarize_telemetry([]),
+        "quantized_nbits": quantized_nbits if cache_mode == "quantized" else "",
+        "quantized_backend": quantized_backend if cache_mode == "quantized" else "",
         **asdict(shape),
     }
 
     inputs: dict[str, torch.Tensor] | None = None
     try:
         inputs = make_inputs(tokenizer, batch_size, seq_len, device)
-        actual = prefill_kv_bytes(model, inputs)
-        row["actual_prefill_kv_bytes"] = actual
-        row["kv_actual_over_theory"] = actual / row["theoretical_kv_bytes"] if row["theoretical_kv_bytes"] else math.nan
+        try:
+            actual = prefill_kv_bytes(model, inputs)
+            row["actual_prefill_kv_bytes"] = actual
+            row["kv_actual_over_theory"] = actual / row["theoretical_kv_bytes"] if row["theoretical_kv_bytes"] else math.nan
+            row["prefill_status"] = "ok"
+        except BaseException as exc:  # noqa: BLE001 - best-effort prefill measurement.
+            row["prefill_status"] = "oom" if is_oom(exc) else "error"
+            row["prefill_error"] = f"{type(exc).__name__}: {exc}"
+            if not (continue_after_prefill_oom and is_oom(exc)):
+                raise
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
 
         if device.type == "cuda":
             torch.cuda.empty_cache()
@@ -274,7 +379,11 @@ def bench_one(
                     max_new_tokens=1,
                     do_sample=False,
                     pad_token_id=tokenizer.pad_token_id,
-                    **build_generate_kwargs(cache_mode),
+                    **build_generate_kwargs(
+                        cache_mode,
+                        quantized_nbits=quantized_nbits,
+                        quantized_backend=quantized_backend,
+                    ),
                 )
             del warm_inputs
             synchronize_if_cuda(device)
@@ -286,16 +395,43 @@ def bench_one(
         if device.type == "cuda":
             torch.cuda.reset_peak_memory_stats(device)
             synchronize_if_cuda(device)
-        start = time.perf_counter()
-        with torch.inference_mode():
-            generated = model.generate(
-                **inputs,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,
-                pad_token_id=tokenizer.pad_token_id,
-                **build_generate_kwargs(cache_mode),
+
+        telemetry_samples: list[dict[str, float]] = []
+        telemetry_stop = threading.Event()
+        telemetry_thread: threading.Thread | None = None
+        if device.type == "cuda" and telemetry_interval_s > 0:
+            first_sample = query_nvidia_smi_telemetry()
+            if first_sample is not None:
+                telemetry_samples.append(first_sample)
+            telemetry_thread = threading.Thread(
+                target=telemetry_monitor,
+                args=(telemetry_stop, telemetry_samples, telemetry_interval_s),
+                daemon=True,
             )
-        synchronize_if_cuda(device)
+            telemetry_thread.start()
+        start = time.perf_counter()
+        try:
+            with torch.inference_mode():
+                generated = model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=False,
+                    pad_token_id=tokenizer.pad_token_id,
+                    **build_generate_kwargs(
+                        cache_mode,
+                        quantized_nbits=quantized_nbits,
+                        quantized_backend=quantized_backend,
+                    ),
+                )
+            synchronize_if_cuda(device)
+        finally:
+            if telemetry_thread is not None:
+                last_sample = query_nvidia_smi_telemetry()
+                if last_sample is not None:
+                    telemetry_samples.append(last_sample)
+                telemetry_stop.set()
+                telemetry_thread.join(timeout=2)
+                row.update(summarize_telemetry(telemetry_samples))
         elapsed = time.perf_counter() - start
 
         generated_tokens_total = int(max(0, generated.shape[-1] - seq_len) * batch_size)
@@ -332,6 +468,14 @@ def bench_one(
 def write_row(path: str, row: dict[str, Any]) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     exists = os.path.exists(path) and os.path.getsize(path) > 0
+    if exists:
+        with open(path, newline="", encoding="utf-8") as f:
+            existing_header = next(csv.reader(f), [])
+        if existing_header != CSV_COLUMNS:
+            raise RuntimeError(
+                f"Existing CSV schema in {path} does not match this benchmark version; "
+                "write to a new file or remove the old file first."
+            )
     with open(path, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
         if not exists:
@@ -351,6 +495,14 @@ def main() -> int:
     parser.add_argument("--warmup", action="store_true")
     parser.add_argument("--trust-remote-code", action="store_true")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--telemetry-interval", type=float, default=0.2, help="nvidia-smi telemetry sample interval in seconds; set <=0 to disable")
+    parser.add_argument("--quantized-nbits", type=int, default=4)
+    parser.add_argument("--quantized-backend", default="quanto", choices=["quanto", "hqq"])
+    parser.add_argument(
+        "--continue-after-prefill-oom",
+        action="store_true",
+        help="Record prefill OOM but still attempt the requested cache-mode generate; default preserves legacy behavior.",
+    )
     args = parser.parse_args()
 
     if args.device == "cuda" and not torch.cuda.is_available():
@@ -398,6 +550,10 @@ def main() -> int:
                     shape=shape,
                     device=device,
                     warmup=args.warmup,
+                    quantized_nbits=args.quantized_nbits,
+                    quantized_backend=args.quantized_backend,
+                    telemetry_interval_s=args.telemetry_interval,
+                    continue_after_prefill_oom=args.continue_after_prefill_oom,
                 )
                 print(f"  -> {row['status']} tps={row['tokens_per_sec']} err={str(row['error'])[:120]}", flush=True)
                 write_row(args.out, row)
